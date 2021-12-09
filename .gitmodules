@@ -1,0 +1,3 @@
+[submodule "libs/ATP-morphology"]
+	path = libs/ATP-morphology
+	url = https://github.com/cbelth/ATP-morphology.git
