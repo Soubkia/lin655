@@ -57,24 +57,6 @@ class Model:
                     ret[frame][lbl] = self.frames[frame][lbl]
         return ret
 
-    def best_frame(self, lexical_frame, label):
-        if label in self.frames[lexical_frame]:
-            return lexical_frame
-        left_label = self.wlabel(lexical_frame.left)
-        right_label = self.wlabel(lexical_frame.right)
-        left_partial_frame = Frame(left_label, lexical_frame.right)
-        right_partial_frame = Frame(lexical_frame.left, right_label)
-        categorical_frame = Frame(left_label, right_label)
-        if label in self.frames[left_partial_frame]:
-            return left_partial_frame
-        if label in self.frames[right_partial_frame]:
-            return right_partial_frame
-        if label in self.frames[categorical_frame]:
-            return categorical_frame
-        # No good frames exist so make a new lexical frame.
-        return lexical_frame
-
-
     def train(self, text):
         for left, target, right in trigrams(text):
             frame = Frame(left, right)
