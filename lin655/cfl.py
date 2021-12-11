@@ -57,24 +57,93 @@ class Model:
                     ret[frame][lbl] = self.frames[frame][lbl]
         return ret
 
+    def best_labeled_frame(self, lexical_frame, label):
+        if lexical_frame in self.frames and label in self.frames[lexical_frame]:
+            return lexical_frame
+        left_label = self.wlabel(lexical_frame.left)
+        right_label = self.wlabel(lexical_frame.right)
+        left_partial_frame = Frame(left_label, lexical_frame.right)
+        right_partial_frame = Frame(lexical_frame.left, right_label)
+        categorical_frame = Frame(left_label, right_label)
+        if left_partial_frame in self.frames and label in self.frames[left_partial_frame]:
+            return left_partial_frame
+        if right_partial_frame in self.frames and label in self.frames[right_partial_frame]:
+            return right_partial_frame
+        if categorical_frame in self.frames and label in self.frames[categorical_frame]:
+            return categorical_frame
+        # No good frames exist so make a new lexical frame.
+        return lexical_frame
+
+    def applicable_frames(self, lexical_frame):
+        ret = [lexical_frame]
+        left_label = self.wlabel(lexical_frame.left)
+        right_label = self.wlabel(lexical_frame.right)
+        left_partial_frame = Frame(left_label, lexical_frame.right)
+        right_partial_frame = Frame(lexical_frame.left, right_label)
+        categorical_frame = Frame(left_label, right_label)
+        if left_partial_frame in self.frames:
+            ret.append(left_partial_frame)
+        if right_partial_frame in self.frames:
+            ret.append(right_partial_frame)
+        if categorical_frame in self.frames:
+            ret.append(categorical_frame)
+        return ret
+
+    def best_trusted_frame(self, lexical_frame):
+        # TODO: Just make this part of the class.
+        # Order frames by most specific.
+        def most_specific(frame):
+            if frame.is_lexical:
+                return 0
+            elif frame.is_partial:
+                return 1
+            elif frame.is_categorical:
+                return 2
+        
+        frames = sorted(
+            list(
+                set(self.applicable_frames(lexical_frame)) & set(self.trusted_frames.keys())
+            ),
+            key=most_specific
+        )
+        if frames:
+            return frames[0]
+        return None
+
     def train(self, text):
-        for left, target, right in trigrams(text):
+        import tqdm  # XXX: Delete me?
+
+        for left, target, right in tqdm.tqdm(trigrams(text)):
             frame = Frame(left, right)
             wlabel, flabel = self.wlabel(target), self.flabel(frame)
+            trusted_frame = self.best_trusted_frame(frame)
             # The target word is part of the trusted lexicon.
             if wlabel:
+                best_frame = self.best_labeled_frame(frame, wlabel)
                 # Update frame labels.
-                self.frames[frame][wlabel] += 1
-                for lbl in self.frames[frame]:
-                    if lbl != wlabel:
-                        self.frames[frame][lbl] -= 1
+                self.frames[best_frame][wlabel] += 1
+                for frm in self.applicable_frames(frame):
+                    if frm == best_frame:
+                        continue  # Do not punish good boys.
+                    if frm in self.frames:
+                        for lbl in self.frames[frm]:
+                            self.frames[frm][lbl] -= 1
             # The frame is a trusted context.
-            if flabel:
-                # Update word labels.
+            if trusted_frame:
+                flabel, fscore = max(self.frames[trusted_frame].items(), key=itemgetter(1))
                 self.lexicon[target][flabel] += 1
                 for lbl in self.lexicon[target]:
                     if lbl != flabel:
                         self.lexicon[target][lbl] -= 0.75
+            # If learning happened try to generalize.
+            if wlabel or trusted_frame:
+                self.generalize()
+
+    def update_frames(self, frame):
+        pass
+
+    def update_lexicon(self, frame):
+        pass
 
     def generalize(self):
         for lbl in Label:
@@ -83,7 +152,7 @@ class Model:
             for frame in self.frames:
                 if not frame.is_lexical:
                     continue # Skip non-lexical frames.
-                if self.frames[frame][lbl] > self.fthresh:
+                if lbl in self.frames[frame] and self.frames[frame][lbl] > self.fthresh:
                     subset[frame][lbl] = self.frames[frame][lbl]
             N = len(subset)
             if N < 2:
@@ -102,12 +171,12 @@ class Model:
             candidates = nltk.FreqDist(candidates)
             # Create generalize frames.
             for frame, freq in candidates.items():
-                if lbl in self.frames[frame]:
+                if frame in self.frames and lbl in self.frames[frame]:
                     continue  # Already created this frame.
                 if freq > threshold:
                     self.frames[frame][lbl] = 1
 
-    # TODO: This should not be taking the "max"
+    # TODO: Should this be taking the max?
     def wlabel(self, word):
         # Retrieve the highest scoring label for the word.
         if word not in self.lexicon:
@@ -117,6 +186,7 @@ class Model:
             return None
         return label
 
+    # XXX: Delete me.
     def flabel(self, frame):
         if frame not in self.frames:
             return None

@@ -18,9 +18,9 @@ class Label(enum.Enum):
     CONJ = "CONJ"
     PREP = "PREP"
     VERB = "VERB"
-    VERB_PAST = "VERB_PAST"
-    VERB_PROG = "VERB_PROG"
-    NOUN_PLRL = "NOUN_PLRL"
+    #  VERB_PAST = "VERB_PAST"
+    #  VERB_PROG = "VERB_PROG"
+    #  NOUN_PLRL = "NOUN_PLRL"
 
 
 SEEDS = [
@@ -52,14 +52,14 @@ SEEDS = [
     ("and", Label.CONJ),
     ("or", Label.CONJ),
     ("but", Label.CONJ),
-    ("used", Label.VERB_PAST),
-    ("looked", Label.VERB_PAST),
-    ("called", Label.VERB_PAST),
-    ("made", Label.VERB_PAST),
-    ("being", Label.VERB_PROG),
-    ("going", Label.VERB_PROG),
-    ("playing", Label.VERB_PROG),
-    ("days", Label.NOUN_PLRL),
-    ("boys", Label.NOUN_PLRL),
-    ("words", Label.NOUN_PLRL)
+    #  ("used", Label.VERB_PAST),
+    #  ("looked", Label.VERB_PAST),
+    #  ("called", Label.VERB_PAST),
+    #  ("made", Label.VERB_PAST),
+    #  ("being", Label.VERB_PROG),
+    #  ("going", Label.VERB_PROG),
+    #  ("playing", Label.VERB_PROG),
+    #  ("days", Label.NOUN_PLRL),
+    #  ("boys", Label.NOUN_PLRL),
+    #  ("words", Label.NOUN_PLRL)
 ]
