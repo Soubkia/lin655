@@ -1,3 +1,9 @@
 [submodule "libs/ATP-morphology"]
 	path = libs/ATP-morphology
 	url = https://github.com/cbelth/ATP-morphology.git
+[submodule "libs/eng"]
+	path = libs/eng
+	url = https://github.com/unimorph/eng.git
+[submodule "libs/UD_English-GUM"]
+	path = libs/UD_English-GUM
+	url = https://github.com/UniversalDependencies/UD_English-GUM.git

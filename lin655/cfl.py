@@ -7,27 +7,6 @@ from operator import itemgetter
 from .utils import SEEDS, Label, trigrams
 
 
-@dataclass(frozen=True)
-class Frame:
-    left: str
-    right: str
-    
-    @property
-    def is_lexical(self):
-        return isinstance(self.left, str) and isinstance(self.right, str)
-    
-    @property
-    def is_partial(self):
-        return (
-            (isinstance(self.left, Label) and isinstance(self.right, str)) or
-            (isinstance(self.left, str) and isinstance(self.right, Label))
-        )
-    
-    @property
-    def is_categorical(self):
-        return isinstance(self.left, Label) and isinstance(self.right, Label)
-
-
 @dataclass
 class Model:
     frames: dict = field(default_factory=lambda: defaultdict(lambda: defaultdict(int)))  # frame -> label -> score
