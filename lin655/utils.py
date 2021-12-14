@@ -1,5 +1,6 @@
 import conllu
 import enum
+import functools
 import nltk
 import pathlib
 from dataclasses import dataclass
@@ -13,19 +14,25 @@ def trigrams(text):
             yield trigram
 
 
-def corpus():
+@functools.lru_cache
+def get_unimorph(with_lemmas=True):
     path = pathlib.Path(
         __file__
     ).resolve().parent.parent.joinpath(
-        "libs", "UD_English-GUM", "en_gum-ud-train.conllu"
+        "libs", "eng", "eng"
     ).as_posix()
 
+    unimorph = {}
     with open(path) as fd:
-        return conllu.parse(fd.read())
-
-
-def corpus_raw():
-    return " ".join([" ".join(map(itemgetter("form"), snt)) for snt in corpus()])
+        for line in fd:
+            if not line.strip().split():
+                continue  # Skip empty lines
+            lemma, word, tags = line.strip().split()
+            if with_lemmas:
+                unimorph[word] = lemma, tuple(tags.split(";"))
+            else:
+                unimorph[word] = tuple(tags.split(";"))
+    return unimorph
 
 
 @dataclass(frozen=True)
@@ -58,9 +65,9 @@ class Label(enum.Enum):
     CONJ = "CONJ"
     PREP = "PREP"
     VERB = "VERB"
-    VERB_PAST = "VERB_PAST"
-    VERB_PROG = "VERB_PROG"
-    NOUN_PLRL = "NOUN_PLRL"
+    #  VERB_PAST = "VERB_PAST"
+    #  VERB_PROG = "VERB_PROG"
+    #  NOUN_PLRL = "NOUN_PLRL"
 
 
 SEEDS = [
@@ -92,14 +99,14 @@ SEEDS = [
     ("and", Label.CONJ),
     ("or", Label.CONJ),
     ("but", Label.CONJ),
-    ("used", Label.VERB_PAST),
-    ("looked", Label.VERB_PAST),
-    ("called", Label.VERB_PAST),
-    ("made", Label.VERB_PAST),
-    ("being", Label.VERB_PROG),
-    ("going", Label.VERB_PROG),
-    ("playing", Label.VERB_PROG),
-    ("days", Label.NOUN_PLRL),
-    ("boys", Label.NOUN_PLRL),
-    ("words", Label.NOUN_PLRL)
+    ("used", Label.VERB),
+    ("looked", Label.VERB),
+    ("called", Label.VERB),
+    ("made", Label.VERB),
+    #  ("being", Label.VERB),
+    ("going", Label.VERB),
+    ("playing", Label.VERB),
+    #  ("days", Label.NOUN_PLRL),
+    #  ("boys", Label.NOUN_PLRL),
+    #  ("words", Label.NOUN_PLRL)
 ]
